@@ -1,0 +1,227 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root,
+[data-theme="light"] {
+  --radius: 0.75rem;
+  --background: #ffffff;
+  --foreground: #15151a;
+  --card: #ffffff;
+  --card-foreground: #15151a;
+  --popover: #ffffff;
+  --popover-foreground: #15151a;
+  --primary: #554dff;
+  --primary-foreground: #ffffff;
+  --secondary: #f0efff;
+  --secondary-foreground: #15151a;
+  --muted: #ebebef;
+  --muted-foreground: #5f606b;
+  --accent: #ecebff;
+  --accent-foreground: #15151a;
+  --destructive: #b42318;
+  --border: #dcdde5;
+  --input: #dcdde5;
+  --ring: #554dff;
+  --ok: #087f5b;
+  --warn: #ad5b00;
+
+  /* Side-panel surfaces. Panel and chrome are both plain white; the panel edge
+     is a shadow (the artifact slides under it) while the header and footer are
+     separated by hairline rules, which stay crisp at this scale. */
+  --panel: #ffffff;
+  --panel-foreground: #15151a;
+  --chrome: #ffffff;
+  /* Shadow cast leftward so the artifact column reads as sliding underneath. */
+  --panel-shadow: rgba(15, 17, 26, 0.13);
+
+  /* Transcript: the reviewer's turn is a soft neutral bubble; the agent's reply
+     is plain text on the panel surface (no container, no tint). */
+  --bubble-user: #f1f1f3;
+  --bubble-user-foreground: #15151a;
+}
+
+[data-theme="dark"] {
+  --background: #0e0f14;
+  --foreground: #f6f7fb;
+  --card: #1c1e26;
+  --card-foreground: #f6f7fb;
+  --popover: #1c1e26;
+  --popover-foreground: #f6f7fb;
+  --primary: #8b88ff;
+  --primary-foreground: #14142a;
+  --secondary: #26264d;
+  --secondary-foreground: #f6f7fb;
+  --muted: #24262e;
+  --muted-foreground: #b2b5c2;
+  --accent: #2b2a58;
+  --accent-foreground: #f6f7fb;
+  --destructive: #ff8b83;
+  --border: #363a4a;
+  --input: #363a4a;
+  --ring: #8b88ff;
+  --ok: #54d6a5;
+  --warn: #ffbd6e;
+
+  /* Dark mirror: panel and chrome are the same plain dark surface. Shadow marks
+     the panel edge; hairline rules mark the header and footer. */
+  --panel: #101116;
+  --panel-foreground: #f6f7fb;
+  --chrome: #101116;
+  --panel-shadow: rgba(0, 0, 0, 0.6);
+
+  --bubble-user: #242730;
+  --bubble-user-foreground: #f6f7fb;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-panel: var(--panel);
+  --color-panel-foreground: var(--panel-foreground);
+  --color-chrome: var(--chrome);
+  --color-bubble-user: var(--bubble-user);
+  --color-bubble-user-foreground: var(--bubble-user-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+}
+
+/* Markdown prose for agent replies (no typography plugin dependency).
+   Deliberately sets no font-size or line-height: these rules are unlayered and
+   would beat Tailwind's layered utilities, so the transcript's type-scale
+   classes own both, keeping agent prose identical to the reviewer's bubble. */
+.md {
+  word-break: break-word;
+}
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md p,
+.md ul,
+.md ol,
+.md pre,
+.md blockquote,
+.md table {
+  margin: 0.5em 0;
+}
+.md ul,
+.md ol {
+  padding-left: 1.25em;
+}
+.md ul {
+  list-style: disc;
+}
+.md ol {
+  list-style: decimal;
+}
+.md li {
+  margin: 0.15em 0;
+}
+.md li::marker {
+  color: var(--muted-foreground);
+}
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  margin: 0.75em 0 0.35em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.md h1 { font-size: 1.15em; }
+.md h2 { font-size: 1.08em; }
+.md h3 { font-size: 1em; }
+.md h4 { font-size: 0.95em; }
+.md a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md strong {
+  font-weight: 600;
+}
+.md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* 0.93em of the 14px transcript scale = 13px, the smallest size we allow. */
+  font-size: 0.93em;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.08em 0.32em;
+}
+.md pre {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.6em 0.75em;
+  overflow-x: auto;
+}
+.md pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.93em;
+}
+.md blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 0.75em;
+  color: var(--muted-foreground);
+}
+.md table {
+  border-collapse: collapse;
+  width: 100%;
+  display: block;
+  overflow-x: auto;
+}
+.md th,
+.md td {
+  border: 1px solid var(--border);
+  padding: 0.3em 0.5em;
+  text-align: left;
+}
+.md hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.75em 0;
+}

@@ -6,7 +6,7 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!!**/dist"]
+		"includes": ["**", "!!**/dist", "!!**/*.css", "!!**/*.html"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -30,6 +30,11 @@
 			"quoteStyle": "double",
 			"trailingCommas": "all",
 			"semicolons": "always"
+		}
+	},
+	"css": {
+		"parser": {
+			"cssModules": false
 		}
 	},
 	"assist": {

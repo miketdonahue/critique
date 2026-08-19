@@ -9,8 +9,7 @@
   "files": [
     "bin",
     "dist",
-    "AGENTS.md",
-    "SKILL.md"
+    "AGENTS.md"
   ],
   "repository": {
     "type": "git",

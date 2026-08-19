@@ -1,0 +1,57 @@
+---
+description: Use when you have generated or edited an HTML file that the user wants to review with point-and-click feedback in the browser.
+globs:
+alwaysApply: false
+---
+
+# critique review loop
+
+`critique` renders an HTML artifact in the browser, collects the user's
+point-and-click feedback, and delivers it back to you through a CLI poll loop.
+
+Run `critique instructions` once for the authoritative, always-current contract.
+The essentials:
+
+## Setup
+
+The user must have critique installed (`bun add -g @miketdonahue/critique`) and
+Bun >= 1.1.0 available.
+
+## The loop
+
+1. **Open** (once per review):
+   ```
+   critique <file.html>
+   ```
+   Opens the artifact in the browser with an annotation panel. Re-running resumes
+   the same session.
+
+2. **Poll for feedback** (bounded — never block indefinitely):
+   ```
+   critique poll <file.html> --timeout-ms 60000
+   ```
+   Blocks until the user submits a batch, then prints a machine-readable JSON
+   payload: `prompts[]` each with `selector`, `text`, `tag`, and a `prompt` note.
+   On `no feedback within <ms>`, re-poll — feedback is durable server-side.
+
+3. **Handle each item by its `tag`**:
+   - `element` / `text` - a change request. Edit the HTML at the target identified
+     by `selector` and `text`.
+   - `message` - freeform chat. Answer it in your reply; only edit the file if the
+     message explicitly asks for a change.
+
+4. **Reply and wait for the next round**:
+   ```
+   critique poll <file.html> --agent-reply "<summary of changes>" --timeout-ms 60000
+   ```
+   Posts your summary to the browser panel, then waits for the next batch.
+
+5. **Repeat** steps 3-4 until poll reports the session ended. End it yourself when
+   done:
+   ```
+   critique end <file.html>
+   ```
+
+## Installation
+
+Save this file as `.cursor/rules/critique.mdc` in your project root.

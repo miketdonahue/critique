@@ -20,7 +20,7 @@ from the code.** The essentials:
    are freeform chat: answer them and edit only if the message asks for a change.
 4. `critique poll <file.html> --agent-reply "<summary>" --timeout-ms 60000` — post
    your summary and wait for the next batch.
-5. Repeat 3–4 until poll reports the session ended; then stop. End it yourself with
+5. Repeat 3-4 until poll reports the session ended; then stop. End it yourself with
    `critique end <file.html>`.
 
 Always pass `--timeout-ms` in agentic contexts and re-poll — never block

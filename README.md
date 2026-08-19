@@ -34,19 +34,31 @@ by default) that persists session state, so nothing is lost between turns.
 
 - [Bun](https://bun.sh) ≥ 1.1.0
 
+critique runs on Bun — it uses Bun's HTTP server and file APIs at runtime. Node is not supported.
+
 ## Install
 
+**Global install (recommended):**
+
 ```sh
-git clone <this-repo> && cd critique
-bun install
-bun run build      # builds the browser UI + injected SDK into dist/ (required)
-bun link           # optional: puts `critique` on your PATH
+bun add -g @miketdonahue/critique
+critique report.html
 ```
 
-`bun run build` is required before first use — the server serves the built
-browser UI from `dist/`. After `bun link` you can run `critique` from any
-directory. Without it, substitute `bun run dev` for `critique` (e.g.
-`bun run dev report.html`).
+**One-off with bunx:**
+
+```sh
+bunx @miketdonahue/critique report.html
+```
+
+**From source:**
+
+```sh
+git clone https://github.com/miketdonahue/critique.git && cd critique
+bun install
+bun run build
+bun link        # puts `critique` on your PATH
+```
 
 ## What an end user should do (the effective workflow)
 

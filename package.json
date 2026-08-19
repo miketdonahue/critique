@@ -1,5 +1,5 @@
 {
-  "name": "critique",
+  "name": "@miketdonahue/critique",
   "version": "0.1.0",
   "description": "Render agent-generated HTML, give point-and-click feedback, and send it to any agent through a CLI long-poll loop.",
   "type": "module",
@@ -8,15 +8,23 @@
   },
   "files": [
     "bin",
-    "src",
     "dist",
     "AGENTS.md",
     "SKILL.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/miketdonahue/critique.git"
+  },
+  "homepage": "https://github.com/miketdonahue/critique#readme",
+  "bugs": {
+    "url": "https://github.com/miketdonahue/critique/issues"
+  },
   "scripts": {
     "build": "bun run scripts/build.ts",
     "build:chrome": "vite build -c vite.config.chrome.ts",
     "build:sdk": "vite build -c vite.config.sdk.ts",
+    "prepublishOnly": "bun run build",
     "dev": "bun run src/cli.ts",
     "server": "bun run src/cli.ts server",
     "typecheck": "tsc --noEmit"

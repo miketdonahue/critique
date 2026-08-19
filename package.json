@@ -22,8 +22,8 @@
   },
   "scripts": {
     "build": "bun run scripts/build.ts",
-    "build:chrome": "vite build -c vite.config.chrome.ts",
-    "build:sdk": "vite build -c vite.config.sdk.ts",
+    "build:chrome": "vite build -c config/vite.chrome.ts",
+    "build:sdk": "vite build -c config/vite.sdk.ts",
     "prepublishOnly": "bun run build",
     "dev": "bun run src/cli.ts",
     "server": "bun run src/cli.ts server",

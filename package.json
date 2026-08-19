@@ -41,6 +41,9 @@
     "annotate"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "np": {
     "branch": "main",
     "testScript": "check",

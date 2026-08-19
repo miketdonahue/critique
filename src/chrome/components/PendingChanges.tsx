@@ -1,5 +1,11 @@
+import {
+  ChevronDown,
+  MessageSquare,
+  SquareMousePointer,
+  Type,
+  X,
+} from "lucide-react";
 import * as React from "react";
-import { ChevronDown, SquareMousePointer, Type, MessageSquare, X } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -42,7 +48,10 @@ export function PendingChanges({ queued, onRemove }: PendingChangesProps) {
     >
       <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left">
         <span className="flex items-center gap-2">
-          <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+          <span
+            className="size-1.5 shrink-0 rounded-full bg-primary"
+            aria-hidden
+          />
           <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
             Pending changes
           </span>
@@ -68,7 +77,9 @@ export function PendingChanges({ queued, onRemove }: PendingChangesProps) {
                 {TAG_ICON[p.tag]}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="line-clamp-4 break-words leading-snug">{p.prompt}</div>
+                <div className="line-clamp-4 break-words leading-snug">
+                  {p.prompt}
+                </div>
                 {p.tag !== "message" && (
                   <div className="mt-0.5 line-clamp-2 break-words text-[13px] leading-snug text-muted-foreground">
                     {p.text ? `\u201c${p.text}\u201d` : p.selector}

@@ -1,5 +1,9 @@
-import * as React from "react";
 import { Check, CircleOff, Copy } from "lucide-react";
+import * as React from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type {
   ChromeToSdk,
@@ -11,13 +15,9 @@ import type {
   StatePayload,
   Theme,
 } from "../types.ts";
-import { SettingsMenu } from "./components/SettingsMenu.tsx";
 import { PendingChanges } from "./components/PendingChanges.tsx";
+import { SettingsMenu } from "./components/SettingsMenu.tsx";
 import { Transcript } from "./components/Transcript.tsx";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/sonner";
-import { toast } from "sonner";
 
 // Module-level constants (computed once, not reactive).
 const key = location.pathname.split("/").filter(Boolean)[1] ?? "";
@@ -60,7 +60,9 @@ function effectiveTheme(sel: Theme): "light" | "dark" {
     : sel;
 }
 
-const chord = navigator.platform.toLowerCase().includes("mac") ? "⌘I" : "Ctrl+I";
+const chord = navigator.platform.toLowerCase().includes("mac")
+  ? "⌘I"
+  : "Ctrl+I";
 
 export function App() {
   const [noSession, setNoSession] = React.useState(false);
@@ -73,7 +75,8 @@ export function App() {
   const [ended, setEnded] = React.useState(false);
   const [queued, setQueued] = React.useState<Prompt[]>(loadQueueFromStorage);
   const [annotation, setAnnotation] = React.useState(true);
-  const [themeSelection, setThemeSelection] = React.useState<Theme>(loadThemeFromStorage);
+  const [themeSelection, setThemeSelection] =
+    React.useState<Theme>(loadThemeFromStorage);
   const [copied, setCopied] = React.useState(false);
   const [draft, setDraft] = React.useState("");
   const [panelWidth, setPanelWidth] = React.useState(loadPanelWidth);
@@ -100,11 +103,21 @@ export function App() {
   void presence;
 
   // ---- ref syncs (keep mirrors current) ---------------------------------------
-  React.useEffect(() => { tokenRef.current = token; }, [token]);
-  React.useEffect(() => { annotationRef.current = annotation; }, [annotation]);
-  React.useEffect(() => { endedRef.current = ended; }, [ended]);
-  React.useEffect(() => { queuedRef.current = queued; }, [queued]);
-  React.useEffect(() => { themeSelectionRef.current = themeSelection; }, [themeSelection]);
+  React.useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+  React.useEffect(() => {
+    annotationRef.current = annotation;
+  }, [annotation]);
+  React.useEffect(() => {
+    endedRef.current = ended;
+  }, [ended]);
+  React.useEffect(() => {
+    queuedRef.current = queued;
+  }, [queued]);
+  React.useEffect(() => {
+    themeSelectionRef.current = themeSelection;
+  }, [themeSelection]);
 
   // ---- helpers ----------------------------------------------------------------
 
@@ -134,7 +147,8 @@ export function App() {
     localStorage.setItem(themeStorageKey, sel);
     document.documentElement.dataset.theme = effectiveTheme(sel);
     toSdk({ type: "critique:setTheme", theme: sel });
-    const label = sel === "system" ? "System" : sel === "light" ? "Light" : "Dark";
+    const label =
+      sel === "system" ? "System" : sel === "light" ? "Light" : "Dark";
     toast.success(`Theme set to ${label}`);
   }
 
@@ -174,7 +188,8 @@ export function App() {
 
   /** Clamp to [PANEL_MIN, container - ARTIFACT_MIN] against the live container. */
   function clampPanel(px: number): number {
-    const total = mainRef.current?.getBoundingClientRect().width ?? window.innerWidth;
+    const total =
+      mainRef.current?.getBoundingClientRect().width ?? window.innerWidth;
     const max = Math.max(PANEL_MIN, total - ARTIFACT_MIN);
     return Math.min(Math.max(Math.round(px), PANEL_MIN), max);
   }
@@ -295,10 +310,11 @@ export function App() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-
   // 1. Boot: fetch initial state, set DOM title, apply theme before paint.
   React.useEffect(() => {
-    document.documentElement.dataset.theme = effectiveTheme(themeSelectionRef.current);
+    document.documentElement.dataset.theme = effectiveTheme(
+      themeSelectionRef.current,
+    );
     void (async () => {
       const res = await fetch(`/api/${key}/state`);
       if (res.status === 404) {
@@ -328,14 +344,29 @@ export function App() {
   React.useEffect(() => {
     function onMessage(event: MessageEvent<SdkToChrome>) {
       const msg = event.data;
-      if (!msg || typeof msg.type !== "string" || !msg.type.startsWith("critique:")) return;
+      if (
+        !msg ||
+        typeof msg.type !== "string" ||
+        !msg.type.startsWith("critique:")
+      )
+        return;
       if (msg.token !== tokenRef.current) return;
       switch (msg.type) {
         case "critique:ready":
           toSdk({ type: "critique:setMode", enabled: annotationRef.current });
-          toSdk({ type: "critique:setTheme", theme: themeSelectionRef.current });
-          toSdk({ type: "critique:restoreScroll", x: lastScrollRef.current.x, y: lastScrollRef.current.y });
-          toSdk({ type: "critique:restoreReviewState", state: lastReviewStateRef.current });
+          toSdk({
+            type: "critique:setTheme",
+            theme: themeSelectionRef.current,
+          });
+          toSdk({
+            type: "critique:restoreScroll",
+            x: lastScrollRef.current.x,
+            y: lastScrollRef.current.y,
+          });
+          toSdk({
+            type: "critique:restoreReviewState",
+            state: lastReviewStateRef.current,
+          });
           break;
         case "critique:queuePrompt":
           setQueued((q) => {
@@ -362,7 +393,8 @@ export function App() {
       }
     }
     window.addEventListener("message", onMessage as EventListener);
-    return () => window.removeEventListener("message", onMessage as EventListener);
+    return () =>
+      window.removeEventListener("message", onMessage as EventListener);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 3. SSE — reconnects if key changes (it never does after mount).
@@ -370,7 +402,9 @@ export function App() {
     if (!key) return;
     const es = new EventSource(`/events/${key}`);
     es.addEventListener("presence", (e) => {
-      const data: { state: Presence } = JSON.parse((e as MessageEvent<string>).data);
+      const data: { state: Presence } = JSON.parse(
+        (e as MessageEvent<string>).data,
+      );
       if (!endedRef.current) {
         if (data.state === "ended") {
           setEnded(true);
@@ -383,7 +417,9 @@ export function App() {
       }
     });
     es.addEventListener("review-sync", (e) => {
-      const data: { reviews: Review[] } = JSON.parse((e as MessageEvent<string>).data);
+      const data: { reviews: Review[] } = JSON.parse(
+        (e as MessageEvent<string>).data,
+      );
       setReviews(data.reviews);
     });
     es.addEventListener("reload", () => {
@@ -455,6 +491,7 @@ export function App() {
           )}
         </div>
         <aside className="relative z-10 flex min-h-0 flex-col bg-panel text-panel-foreground shadow-[-10px_0_28px_-6px_var(--panel-shadow)]">
+          {/* biome-ignore lint/a11y/useSemanticElements: interactive splitter bar requires role="separator" with aria-valuenow/min/max; <hr> is static */}
           <div
             ref={handleRef}
             role="separator"
@@ -485,7 +522,9 @@ export function App() {
                 onClick={copyFile}
                 className={cn(
                   "group flex items-center gap-1.5 text-[13px] transition-colors",
-                  copied ? "text-ok" : "text-muted-foreground hover:text-foreground",
+                  copied
+                    ? "text-ok"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 title={file}
               >
@@ -503,30 +542,38 @@ export function App() {
               annotateChord={chord}
               theme={themeSelection}
               onThemeChange={applyTheme}
-              onReload={() => void (async () => {
-                const id = toast.loading("Reloading...");
-                try {
-                  const res = await fetch(`/api/${key}/state`);
-                  if (!res.ok) throw new Error(`Server responded ${res.status}`);
-                  const s: StatePayload = await res.json();
-                  setToken(s.token);
-                  tokenRef.current = s.token;
-                  setRevision(s.revision);
-                  toast.success("Reloaded", { id });
-                } catch {
-                  toast.error("Failed to reload", { id });
-                }
-              })()}
+              onReload={() =>
+                void (async () => {
+                  const id = toast.loading("Reloading...");
+                  try {
+                    const res = await fetch(`/api/${key}/state`);
+                    if (!res.ok)
+                      throw new Error(`Server responded ${res.status}`);
+                    const s: StatePayload = await res.json();
+                    setToken(s.token);
+                    tokenRef.current = s.token;
+                    setRevision(s.revision);
+                    toast.success("Reloaded", { id });
+                  } catch {
+                    toast.error("Failed to reload", { id });
+                  }
+                })()
+              }
               onEnd={() => void endSession()}
             />
           </header>
           {ended && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-panel/80 backdrop-blur-sm">
               <CircleOff className="size-10 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">Review session ended.</p>
+              <p className="text-sm text-muted-foreground">
+                Review session ended.
+              </p>
             </div>
           )}
-          <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+          <div
+            ref={scrollRef}
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3"
+          >
             <Transcript reviews={reviews} />
           </div>
           <div className="z-10 flex flex-col gap-2 bg-chrome p-3">
@@ -551,7 +598,9 @@ export function App() {
                 onClick={() => void makeChanges()}
                 disabled={ended || queued.length === 0}
               >
-                {queued.length > 0 ? `Request changes (${queued.length})` : "Request changes"}
+                {queued.length > 0
+                  ? `Request changes (${queued.length})`
+                  : "Request changes"}
               </Button>
               <Button
                 type="button"
@@ -564,7 +613,9 @@ export function App() {
           </div>
         </aside>
       </main>
-      <Toaster theme={themeSelection === "system" ? "system" : themeSelection} />
+      <Toaster
+        theme={themeSelection === "system" ? "system" : themeSelection}
+      />
     </>
   );
 }

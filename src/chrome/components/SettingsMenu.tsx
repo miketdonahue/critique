@@ -1,17 +1,16 @@
-import * as React from "react";
-import { Menu, RotateCcw, CircleX } from "lucide-react";
+import { CircleX, Menu, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuCheckboxItem,
-  DropdownMenuItem,
+  DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Theme } from "../../types.ts";
 

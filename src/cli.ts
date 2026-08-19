@@ -1,9 +1,8 @@
-import { existsSync, openSync, realpathSync } from "node:fs";
+import { existsSync, mkdirSync, openSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { baseUrl, port, serverLogPath, stateDir, VERSION } from "./config.ts";
-import { keyForFile } from "./store.ts";
 import { runServer } from "./server.ts";
-import { mkdirSync } from "node:fs";
+import { keyForFile } from "./store.ts";
 import type { PollResponse, Prompt } from "./types.ts";
 
 const USAGE = `critique v${VERSION} — render HTML, collect point-and-click feedback, deliver it to any agent.
@@ -86,7 +85,8 @@ function parseFlags(argv: string[]): Flags {
     const arg = argv[i]!;
     if (arg === "--no-open") noOpen = true;
     else if (arg === "--agent-reply") agentReply = argv[++i] ?? "";
-    else if (arg === "--timeout-ms") timeoutMs = Number.parseInt(argv[++i] ?? "0", 10) || 0;
+    else if (arg === "--timeout-ms")
+      timeoutMs = Number.parseInt(argv[++i] ?? "0", 10) || 0;
     else positionals.push(arg);
   }
   return { positionals, noOpen, agentReply, timeoutMs };
@@ -94,7 +94,9 @@ function parseFlags(argv: string[]): Flags {
 
 async function serverHealthy(): Promise<boolean> {
   try {
-    const res = await fetch(`${baseUrl()}/health`, { signal: AbortSignal.timeout(1000) });
+    const res = await fetch(`${baseUrl()}/health`, {
+      signal: AbortSignal.timeout(1000),
+    });
     return res.ok;
   } catch {
     return false;
@@ -130,7 +132,11 @@ function openBrowser(url: string): void {
         ? ["cmd", "/c", "start", "", url]
         : ["xdg-open", url];
   try {
-    Bun.spawn(cmd, { stdin: "ignore", stdout: "ignore", stderr: "ignore" }).unref();
+    Bun.spawn(cmd, {
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    }).unref();
   } catch {
     /* headless environment; the URL is printed regardless */
   }
@@ -158,21 +164,35 @@ async function cmdOpen(file: string, flags: Flags): Promise<void> {
   );
 }
 
-function renderFeedback(res: Extract<PollResponse, { status: "feedback" }>): string {
+function renderFeedback(
+  res: Extract<PollResponse, { status: "feedback" }>,
+): string {
   const lines: string[] = [];
-  lines.push(`[critique] ${res.prompts.length} feedback item(s) for ${res.file}:`);
+  lines.push(
+    `[critique] ${res.prompts.length} feedback item(s) for ${res.file}:`,
+  );
   lines.push("");
   res.prompts.forEach((p: Prompt, i) => {
     lines.push(`${i + 1}. ${p.prompt || "(no note)"}`);
-    lines.push(`   kind: ${p.tag}${p.tag === "message" ? " (chat - answer it; edit only if it asks for a change)" : ""}`);
+    lines.push(
+      `   kind: ${p.tag}${p.tag === "message" ? " (chat - answer it; edit only if it asks for a change)" : ""}`,
+    );
     if (p.selector) lines.push(`   selector: ${p.selector}`);
     if (p.text) lines.push(`   text: "${p.text}"`);
     lines.push("");
   });
   lines.push("Machine-readable payload:");
-  lines.push(JSON.stringify({ file: res.file, revision: res.revision, prompts: res.prompts }, null, 2));
+  lines.push(
+    JSON.stringify(
+      { file: res.file, revision: res.revision, prompts: res.prompts },
+      null,
+      2,
+    ),
+  );
   lines.push("");
-  lines.push("Apply element/text change requests. Message items are chat: answer them and edit only if they ask for a change. Then run `critique poll --agent-reply \"<summary>\" <file>` to continue.");
+  lines.push(
+    'Apply element/text change requests. Message items are chat: answer them and edit only if they ask for a change. Then run `critique poll --agent-reply "<summary>" <file>` to continue.',
+  );
   return lines.join("\n");
 }
 
@@ -190,7 +210,9 @@ async function cmdPoll(file: string, key: string, flags: Flags): Promise<void> {
       body: JSON.stringify({ text: flags.agentReply }),
     });
   }
-  process.stderr.write(`[critique] waiting for feedback on ${file} (Ctrl-C to stop)...\n`);
+  process.stderr.write(
+    `[critique] waiting for feedback on ${file} (Ctrl-C to stop)...\n`,
+  );
 
   // Long-poll resiliently: Bun's fetch aborts idle connections after ~300s, and
   // proxies may drop them sooner, so a single fetch cannot wait indefinitely.
@@ -200,7 +222,9 @@ async function cmdPoll(file: string, key: string, flags: Flags): Promise<void> {
   while (true) {
     const remaining = deadline ? Math.max(0, deadline - Date.now()) : 0;
     if (deadline && remaining === 0) {
-      process.stdout.write(`[critique] no feedback within ${flags.timeoutMs}ms; re-run \`critique poll ${file}\`.\n`);
+      process.stdout.write(
+        `[critique] no feedback within ${flags.timeoutMs}ms; re-run \`critique poll ${file}\`.\n`,
+      );
       return;
     }
     const params = new URLSearchParams({ key });
@@ -216,13 +240,15 @@ async function cmdPoll(file: string, key: string, flags: Flags): Promise<void> {
     }
     if (!body) {
       if (!(await serverHealthy())) {
-        process.stderr.write(`[critique] server unreachable; re-run \`critique poll ${file}\`.\n`);
+        process.stderr.write(
+          `[critique] server unreachable; re-run \`critique poll ${file}\`.\n`,
+        );
         return;
       }
       continue;
     }
     if (body.status === "feedback") {
-      process.stdout.write(renderFeedback(body) + "\n");
+      process.stdout.write(`${renderFeedback(body)}\n`);
       return;
     }
     if (body.status === "ended") {
@@ -277,12 +303,17 @@ export async function run(argv: string[]): Promise<void> {
     await cmdStop();
     return;
   }
-  if (command === undefined || command === "help" || command === "--help" || command === "-h") {
-    process.stdout.write(USAGE + "\n");
+  if (
+    command === undefined ||
+    command === "help" ||
+    command === "--help" ||
+    command === "-h"
+  ) {
+    process.stdout.write(`${USAGE}\n`);
     return;
   }
   if (command === "instructions") {
-    process.stdout.write(AGENT_INSTRUCTIONS + "\n");
+    process.stdout.write(`${AGENT_INSTRUCTIONS}\n`);
     return;
   }
 

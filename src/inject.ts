@@ -6,7 +6,12 @@
  * We only append the SDK loader script, keyed with the current load token so the
  * chrome can reject messages from a stale (pre-reload) iframe.
  */
-export function injectSdk(html: string, key: string, revision: number, token: string): string {
+export function injectSdk(
+  html: string,
+  key: string,
+  revision: number,
+  token: string,
+): string {
   const params = new URLSearchParams({ key, rev: String(revision), token });
   const tag = `<script src="/sdk.js?${params.toString()}" data-critique-sdk></script>`;
   const closing = /<\/body\s*>/i;

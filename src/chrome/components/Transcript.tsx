@@ -1,7 +1,6 @@
-import * as React from "react";
 import { Loader2, MessageSquareDashed } from "lucide-react";
-import { Markdown } from "./Markdown.tsx";
 import type { Prompt, Review } from "../../types.ts";
+import { Markdown } from "./Markdown.tsx";
 
 /**
  * One type scale for every turn in the transcript. Both the reviewer's bubble
@@ -15,10 +14,15 @@ function ChangeCard({ p }: { p: Prompt }) {
     p.text ? `\u201c${p.text}\u201d` : p.selector
   }`;
   return (
-    <div className={`rounded-md border border-border bg-card px-3 py-2 ${TURN_TYPE}`}>
+    <div
+      className={`rounded-md border border-border bg-card px-3 py-2 ${TURN_TYPE}`}
+    >
       <div className="font-medium">{p.prompt}</div>
       {p.tag !== "message" && (
-        <div className="truncate text-[13px] text-muted-foreground" title={anchor}>
+        <div
+          className="truncate text-[13px] text-muted-foreground"
+          title={anchor}
+        >
           {anchor}
         </div>
       )}
@@ -65,10 +69,14 @@ function UserTurn({ review }: { review: Review }) {
  */
 function AgentTurn({ review }: { review: Review }) {
   if (review.status === "addressed" && review.reply) {
-    return <Markdown className={`px-0.5 ${TURN_TYPE}`}>{review.reply}</Markdown>;
+    return (
+      <Markdown className={`px-0.5 ${TURN_TYPE}`}>{review.reply}</Markdown>
+    );
   }
   return (
-    <div className={`flex items-center gap-2 px-0.5 text-muted-foreground ${TURN_TYPE}`}>
+    <div
+      className={`flex items-center gap-2 px-0.5 text-muted-foreground ${TURN_TYPE}`}
+    >
       <Loader2 className="size-3.5 animate-spin" />
       Working...
     </div>

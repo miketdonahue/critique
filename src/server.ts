@@ -1,11 +1,10 @@
-import { watch, type FSWatcher } from "node:fs";
+import { existsSync, type FSWatcher, realpathSync, watch } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { existsSync, realpathSync } from "node:fs";
-import { dirname, join, resolve, relative, isAbsolute, sep } from "node:path";
-import { host, port, linkHost, VERSION } from "./config.ts";
-import { Store } from "./store.ts";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { host, linkHost, port, VERSION } from "./config.ts";
 import { injectSdk } from "./inject.ts";
-import type { Prompt, PollResponse, StatePayload } from "./types.ts";
+import { Store } from "./store.ts";
+import type { PollResponse, Prompt, StatePayload } from "./types.ts";
 
 const DIST = resolve(import.meta.dir, "../dist");
 const CHROME_DIR = join(DIST, "chrome");
@@ -26,7 +25,9 @@ function hostAllowed(req: Request): boolean {
   if (process.env.CRITIQUE_ALLOWED_HOSTS?.trim() === "*") return true;
   const header = req.headers.get("host") ?? "";
   const name = header.replace(/:\d+$/, "").toLowerCase();
-  const extra = (process.env.CRITIQUE_ALLOWED_HOSTS ?? "").split(/\s+/).filter(Boolean);
+  const extra = (process.env.CRITIQUE_ALLOWED_HOSTS ?? "")
+    .split(/\s+/)
+    .filter(Boolean);
   return name === "" || ALLOWED_HOSTS.has(name) || extra.includes(name);
 }
 
@@ -50,9 +51,14 @@ export class Server {
     this.watchers.set(key, watcher);
   }
 
-  private async serveArtifact(key: string, subpath: string, url: URL): Promise<Response> {
+  private async serveArtifact(
+    key: string,
+    subpath: string,
+    url: URL,
+  ): Promise<Response> {
     const session = this.store.get(key);
-    if (!session || !existsSync(session.file)) return new Response("artifact not found", { status: 404 });
+    if (!session || !existsSync(session.file))
+      return new Response("artifact not found", { status: 404 });
     this.ensureWatch(key, session.file);
 
     // index.html (or the bare artifact route) -> inject the SDK loader.
@@ -60,14 +66,20 @@ export class Server {
       const html = await readFile(session.file, "utf8");
       const token = url.searchParams.get("token") ?? this.store.token(key);
       const injected = injectSdk(html, key, session.revision, token);
-      return new Response(injected, { headers: { "content-type": "text/html; charset=utf-8" } });
+      return new Response(injected, {
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
     }
 
     // Sibling asset: resolve strictly within the artifact directory.
     const baseDir = realpathSync(dirname(session.file));
     const target = resolve(baseDir, decodeURIComponent(subpath));
     const rel = relative(baseDir, target);
-    if (rel.startsWith("..") || isAbsolute(rel) || rel.split(sep).includes("..")) {
+    if (
+      rel.startsWith("..") ||
+      isAbsolute(rel) ||
+      rel.split(sep).includes("..")
+    ) {
       return new Response("forbidden", { status: 403 });
     }
     if (!existsSync(target)) return new Response("not found", { status: 404 });
@@ -77,13 +89,17 @@ export class Server {
   private async serveChrome(): Promise<Response> {
     const index = join(CHROME_DIR, "index.html");
     if (!existsSync(index)) {
-      return new Response("Chrome UI not built. Run `bun run build`.", { status: 500 });
+      return new Response("Chrome UI not built. Run `bun run build`.", {
+        status: 500,
+      });
     }
-    return new Response(Bun.file(index), { headers: { "content-type": "text/html; charset=utf-8" } });
+    return new Response(Bun.file(index), {
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
   }
 
   private async serveChromeAsset(path: string): Promise<Response> {
-    const target = resolve(CHROME_DIR, "." + path);
+    const target = resolve(CHROME_DIR, `.${path}`);
     if (!target.startsWith(CHROME_DIR) || !existsSync(target)) {
       return new Response("not found", { status: 404 });
     }
@@ -116,7 +132,9 @@ export class Server {
         const enc = new TextEncoder();
         const send = (event: string, data: unknown) => {
           try {
-            controller.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+            controller.enqueue(
+              enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+            );
           } catch {
             /* controller closed */
           }
@@ -149,7 +167,11 @@ export class Server {
     });
   }
 
-  private async handlePoll(key: string, url: URL, req: Request): Promise<Response> {
+  private async handlePoll(
+    key: string,
+    url: URL,
+    req: Request,
+  ): Promise<Response> {
     if (!this.store.get(key)) return json({ status: "no-session" }, 404);
     const timeoutRaw = url.searchParams.get("timeoutMs");
     const timeoutMs = timeoutRaw ? Number.parseInt(timeoutRaw, 10) : 0;
@@ -160,7 +182,11 @@ export class Server {
         const session = this.store.get(key);
         if (!session) return json({ status: "no-session" }, 404);
         if (session.ended) {
-          const body: PollResponse = { status: "ended", endedBy: session.endedBy, file: session.file };
+          const body: PollResponse = {
+            status: "ended",
+            endedBy: session.endedBy,
+            file: session.file,
+          };
           return json(body);
         }
         const pending = this.store.drainPending(key);
@@ -175,7 +201,8 @@ export class Server {
         }
         if (req.signal.aborted) return json({ status: "timeout" });
         const remaining = deadline ? deadline - Date.now() : 0;
-        if (deadline && remaining <= 0) return json({ status: "timeout" } satisfies PollResponse);
+        if (deadline && remaining <= 0)
+          return json({ status: "timeout" } satisfies PollResponse);
         await this.waitOnce(key, req.signal, remaining);
       }
     } finally {
@@ -184,7 +211,11 @@ export class Server {
   }
 
   /** Wake on feedback/end/abort, or after `timeoutMs` (0 = wait indefinitely). */
-  private async waitOnce(key: string, signal: AbortSignal, timeoutMs: number): Promise<void> {
+  private async waitOnce(
+    key: string,
+    signal: AbortSignal,
+    timeoutMs: number,
+  ): Promise<void> {
     const wake = this.store.waitForWake(key, signal);
     if (timeoutMs <= 0) {
       await wake;
@@ -205,29 +236,41 @@ export class Server {
   }
 
   private async route(req: Request): Promise<Response> {
-    if (!hostAllowed(req)) return new Response("forbidden host", { status: 403 });
+    if (!hostAllowed(req))
+      return new Response("forbidden host", { status: 403 });
     const url = new URL(req.url);
     const path = url.pathname;
 
-    if (path === "/health") return json({ ok: true, version: VERSION, port: port() });
+    if (path === "/health")
+      return json({ ok: true, version: VERSION, port: port() });
     if (path === "/api/shutdown" && req.method === "POST") {
       setTimeout(() => process.exit(0), 50);
       return json({ status: "stopping" });
     }
     if (path === "/sdk.js") {
-      if (!existsSync(SDK_FILE)) return new Response("SDK not built. Run `bun run build`.", { status: 500 });
-      return new Response(Bun.file(SDK_FILE), { headers: { "content-type": "text/javascript; charset=utf-8" } });
+      if (!existsSync(SDK_FILE))
+        return new Response("SDK not built. Run `bun run build`.", {
+          status: 500,
+        });
+      return new Response(Bun.file(SDK_FILE), {
+        headers: { "content-type": "text/javascript; charset=utf-8" },
+      });
     }
 
     // Ensure/resume a session for a file path.
     if (path === "/api/session" && req.method === "POST") {
       const body = await this.readJson(req);
       const file = typeof body.file === "string" ? body.file : "";
-      if (!file || !existsSync(file)) return json({ error: "file not found" }, 400);
+      if (!file || !existsSync(file))
+        return json({ error: "file not found" }, 400);
       const canonical = realpathSync(file);
       const session = this.store.upsert(canonical);
       this.ensureWatch(session.key, canonical);
-      return json({ key: session.key, file: canonical, url: `http://${linkHost()}:${port()}/session/${session.key}` });
+      return json({
+        key: session.key,
+        file: canonical,
+        url: `http://${linkHost()}:${port()}/session/${session.key}`,
+      });
     }
 
     // Artifact document + sibling assets.
@@ -250,7 +293,9 @@ export class Server {
       }
       if (action === "prompts" && req.method === "POST") {
         const body = await this.readJson(req);
-        const prompts = Array.isArray(body.prompts) ? (body.prompts as Prompt[]) : [];
+        const prompts = Array.isArray(body.prompts)
+          ? (body.prompts as Prompt[])
+          : [];
         if (prompts.length > 0) this.store.submitPrompts(key, prompts);
         if (body.endSession === true) this.store.end(key, "user");
         return json({ status: "sent" });
@@ -298,7 +343,9 @@ export class Server {
         }
       },
     });
-    console.error(`[critique] server listening on http://${linkHost()}:${port()}`);
+    console.error(
+      `[critique] server listening on http://${linkHost()}:${port()}`,
+    );
   }
 }
 

@@ -1,7 +1,6 @@
-import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { randomUUID } from "node:crypto";
 import { sessionsDir } from "./config.ts";
 import type { Presence, Prompt, Review, SessionState } from "./types.ts";
 
@@ -36,7 +35,12 @@ export class Store {
   private runtime(key: string): Runtime {
     let rt = this.runtimes.get(key);
     if (!rt) {
-      rt = { clients: new Set(), waiters: new Set(), activePolls: 0, token: randomUUID() };
+      rt = {
+        clients: new Set(),
+        waiters: new Set(),
+        activePolls: 0,
+        token: randomUUID(),
+      };
       this.runtimes.set(key, rt);
     }
     return rt;
@@ -104,7 +108,10 @@ export class Store {
 
   // ---- events ---------------------------------------------------------------
 
-  subscribe(key: string, send: (event: string, data: unknown) => void): () => void {
+  subscribe(
+    key: string,
+    send: (event: string, data: unknown) => void,
+  ): () => void {
     const rt = this.runtime(key);
     rt.clients.add(send);
     return () => {
@@ -231,7 +238,10 @@ export class Store {
       session.revision += 1;
       this.persist(session);
     }
-    this.broadcast(key, "reload", { revision: session?.revision ?? 0, token: rt.token });
+    this.broadcast(key, "reload", {
+      revision: session?.revision ?? 0,
+      token: rt.token,
+    });
     return { revision: session?.revision ?? 0, token: rt.token };
   }
 
